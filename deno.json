@@ -1,0 +1,16 @@
+{
+	"name": "@m4rocks/fresh-cloudflare-ssg",
+	"version": "0.1.0",
+	"license": "MIT",
+	"exports": "./mod.ts",
+	"nodeModulesDir": "auto",
+	"tasks": {
+		"dev": "deno run --watch main.ts"
+	},
+	"imports": {
+		"@fresh/plugin-vite": "jsr:@fresh/plugin-vite@^1.0.4",
+		"@std/fs": "jsr:@std/fs@^1.0.19",
+		"@std/path": "jsr:@std/path@^1.1.2",
+		"vite": "npm:vite@^7.1.7"
+	}
+}
