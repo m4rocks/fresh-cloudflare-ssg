@@ -10,7 +10,7 @@ In your project's `deno.json` add the following task:
 ```json
 {
 	"tasks": {
-		"prerender": "echo \"import \"jsr:@m4rocks/fresh-cloudflare-ssg\";\" | deno run -A -"
+		"prerender": "echo \"import 'jsr:@m4rocks/fresh-cloudflare-ssg'\" | deno run -A -",
 	}
 }
 ```
@@ -19,8 +19,8 @@ You can even schedule it after your build.
 ```json
 {
 	"tasks": {
-		"prerender": "echo \"import \"jsr:@m4rocks/fresh-cloudflare-ssg\";\" | deno run -A -"
-		"build": "vite build && deno task prerender"
+		"prerender": "echo \"import 'jsr:@m4rocks/fresh-cloudflare-ssg'\" | deno run -A -",
+		"build": "vite build && deno task prerender",
 	}
 }
 ```
