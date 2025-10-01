@@ -7,7 +7,9 @@ const { server, address } = startTestServer(app);
 
 const paths: string[] = [];
 
-const baseRoutes = await exists(path.toFileUrl(path.join(Deno.cwd(), "src")).href, { isFile: false, isDirectory: true }) ? "src/routes" : "routes";
+const baseRoutes = (await Deno.stat(path.toFileUrl(path.join(Deno.cwd(), "src")).pathname)).isDirectory ? "src/routes" : "routes";
+console.log(path.toFileUrl(path.join(Deno.cwd(), "src")).href);
+console.log(baseRoutes);
 
 for await (const entry of walk(path.toFileUrl(path.join(Deno.cwd(), baseRoutes)), {
 	includeFiles: true,
@@ -19,7 +21,7 @@ for await (const entry of walk(path.toFileUrl(path.join(Deno.cwd(), baseRoutes))
 		.replace("\\", "/")
 		.replace("index", "") || "/";
 
-	const imported = await import(path.toFileUrl(path.join(Deno.cwd(), entry.path)).href);
+	const imported = await import(path.toFileUrl(entry.path).href);
 	if (!imported.prerender === true) {
 		continue;
 	}
