@@ -7,14 +7,14 @@ const { server, address } = startTestServer(app);
 
 const paths: string[] = [];
 
-const useSrc = await exists("src");
+const baseRoutes = await exists("src") ? "src/routes" : "routes";
 
-for await (const entry of walk(useSrc ? "src/routes" : "routes", {
+for await (const entry of walk(baseRoutes, {
 	includeFiles: true,
 	includeDirs: false,
 	skip: [/(?:^|[\\/])_(?![\\/])[^\\/]+$/, /(?:^|[\\/])[^\\/]*[\[\]][^\\/]*$/],
 })) {
-	const routePath = entry.path.replace(useSrc ? "src/routes" : "routes", "")
+	const routePath = entry.path.replace(baseRoutes, "")
 		.replace(".tsx", "")
 		.replace("\\", "/")
 		.replace("index", "") || "/";
