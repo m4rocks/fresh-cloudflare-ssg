@@ -7,9 +7,9 @@ const { server, address } = startTestServer(app);
 
 const paths: string[] = [];
 
-const baseRoutes = await exists("src") ? "src/routes" : "routes";
+const baseRoutes = await exists(path.toFileUrl(path.join(Deno.cwd(), "src")).href) ? "src/routes" : "routes";
 
-for await (const entry of walk(baseRoutes, {
+for await (const entry of walk(path.toFileUrl(path.join(Deno.cwd(), baseRoutes)), {
 	includeFiles: true,
 	includeDirs: false,
 	skip: [/(?:^|[\\/])_(?![\\/])[^\\/]+$/, /(?:^|[\\/])[^\\/]*[\[\]][^\\/]*$/],
