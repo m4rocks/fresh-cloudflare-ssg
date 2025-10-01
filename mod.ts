@@ -19,7 +19,7 @@ for await (const entry of walk(baseRoutes, {
 		.replace("\\", "/")
 		.replace("index", "") || "/";
 
-	const imported = await import(path.join(Deno.cwd(), entry.path));
+	const imported = await import(path.toFileUrl(path.join(Deno.cwd(), entry.path)).href);
 	if (!imported.prerender === true) {
 		continue;
 	}
