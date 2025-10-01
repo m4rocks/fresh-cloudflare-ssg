@@ -14,7 +14,7 @@ for await (const entry of walk(useSrc ? "src/routes" : "routes", {
 	includeDirs: false,
 	skip: [/(?:^|[\\/])_(?![\\/])[^\\/]+$/, /(?:^|[\\/])[^\\/]*[\[\]][^\\/]*$/],
 })) {
-	const routePath = entry.path.replace("routes", "")
+	const routePath = entry.path.replace(useSrc ? "src/routes" : "routes", "")
 		.replace(".tsx", "")
 		.replace("\\", "/")
 		.replace("index", "") || "/";
