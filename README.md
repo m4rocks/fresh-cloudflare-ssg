@@ -39,3 +39,30 @@ If you are using `wrangler.toml`, add the following:
 [assets]
 directory = "./_fresh/client"
 ```
+
+## How to prerender routes
+
+Prerendering routes is as simple as exporting a `prerender` boolean set to true from the page.
+
+```tsx
+import { useSignal } from "@preact/signals";
+import { define } from "../utils.ts";
+
+export const prerender = true;
+
+export default define.page(function Home(ctx) {
+  const count = useSignal(3);
+
+  return (
+    <div class="px-4 py-8 mx-auto fresh-gradient min-h-screen">
+      <Head>
+        <title>Fresh project</title>
+      </Head>
+      <div class="max-w-screen-md mx-auto flex flex-col items-center justify-center">
+        <h1>Fresh Project</h1>
+      </div>
+    </div>
+  );
+});
+
+```
