@@ -10,7 +10,6 @@ const paths: string[] = [];
 for await (const entry of walk("routes", {
 	includeFiles: true,
 	includeDirs: false,
-	// Exclude files that starts with _ in regex and any files with []. do not use backslashes in regex as it must be valid in both Windows and Unix
 	skip: [/(?:^|[\\/])_(?![\\/])[^\\/]+$/, /(?:^|[\\/])[^\\/]*[\[\]][^\\/]*$/],
 })) {
 	const routePath = entry.path.replace("routes", "")
@@ -19,7 +18,7 @@ for await (const entry of walk("routes", {
 		.replace("index", "") || "/";
 
 	const imported = await import(path.toFileUrl(path.join(Deno.cwd(), entry.path)).href);
-	if (!imported.prerender) {
+	if (!imported.prerender === true) {
 		continue;
 	}
 
