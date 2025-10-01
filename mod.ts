@@ -1,4 +1,4 @@
-import { walk } from "@std/fs";
+import { exists, walk } from "@std/fs";
 import { buildFreshApp, startTestServer } from "./mock_server.ts";
 import * as path from "@std/path";
 
@@ -7,7 +7,9 @@ const { server, address } = startTestServer(app);
 
 const paths: string[] = [];
 
-for await (const entry of walk("routes", {
+const useSrc = await exists("src");
+
+for await (const entry of walk(useSrc ? "src/routes" : "routes", {
 	includeFiles: true,
 	includeDirs: false,
 	skip: [/(?:^|[\\/])_(?![\\/])[^\\/]+$/, /(?:^|[\\/])[^\\/]*[\[\]][^\\/]*$/],

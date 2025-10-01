@@ -4,6 +4,8 @@ This is a simple package that allows you to prerender some routes programaticall
 Fresh and host it on Cloudflare Workers. This greatly improves performance and cost of hosting.
 This package is intended for Fresh >=2.0.0 projects.
 
+This tool will automatically pick up the routes folder even if it is a `src/` folder.
+
 ## How to run
 
 In your project's `deno.json` add the following task:
