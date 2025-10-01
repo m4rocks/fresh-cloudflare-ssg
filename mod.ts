@@ -1,4 +1,4 @@
-import { exists, walk } from "@std/fs";
+import { walk } from "@std/fs";
 import { buildFreshApp, startTestServer } from "./mock_server.ts";
 import * as path from "@std/path";
 
@@ -8,10 +8,8 @@ const { server, address } = startTestServer(app);
 const paths: string[] = [];
 
 const baseRoutes = (await Deno.stat(path.toFileUrl(path.join(Deno.cwd(), "src")).pathname)).isDirectory ? "src/routes" : "routes";
-console.log(path.toFileUrl(path.join(Deno.cwd(), "src")).href);
-console.log(baseRoutes);
 
-for await (const entry of walk(path.toFileUrl(path.join(Deno.cwd(), baseRoutes)), {
+for await (const entry of walk(baseRoutes, {
 	includeFiles: true,
 	includeDirs: false,
 	skip: [/(?:^|[\\/])_(?![\\/])[^\\/]+$/, /(?:^|[\\/])[^\\/]*[\[\]][^\\/]*$/],
@@ -21,7 +19,7 @@ for await (const entry of walk(path.toFileUrl(path.join(Deno.cwd(), baseRoutes))
 		.replace("\\", "/")
 		.replace("index", "") || "/";
 
-	const imported = await import(path.toFileUrl(entry.path).href);
+	const imported = await import(path.join(Deno.cwd(), entry.path));
 	if (!imported.prerender === true) {
 		continue;
 	}
