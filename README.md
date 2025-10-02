@@ -2,9 +2,14 @@
 
 This is a simple package that allows you to prerender some routes programatically within
 Fresh and host it on Cloudflare Workers. This greatly improves performance and cost of hosting.
-This package is intended for Fresh >=2.0.0 projects.
 
-This tool will automatically pick up the routes folder even if it is a `src/` folder.
+## Notes
+* This tool is very early. Later on, I might turn it into a vite plugin and might even make it universal for all hosting providers;
+* This tool is meant to work with Cloudflare. With a few tweaks it might be possible to make it run on other hosting providers;
+* The JavaScript for the prerendered routes is still present and will not be touched;
+* This package is intended for Fresh >= 2.0.0 projects;
+* This tool will automatically pick up the `routes/` or `src/routes/` folder;
+* Partials do not work when navigating to a prerendered route;
 
 ## How to run
 
