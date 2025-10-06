@@ -132,7 +132,7 @@ async function importGetStaticPaths(routePath: string) {
 	await import(path.toFileUrl(path.join(Deno.cwd(), "_fresh", "server", routeModulePath)).href);
 }
 
-export const getAllGetStaticPathsFn = () => {
+export const getAllGetStaticPathsFn = (): GetStaticPaths[] => {
 	// @ts-ignore: We need this to avoid Fresh's treeshaking
 	const fns: GetStaticPaths[] = globalThis.__keepStaticPaths || [];
 	return fns;
