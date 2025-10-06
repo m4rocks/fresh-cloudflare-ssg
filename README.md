@@ -13,23 +13,28 @@ Fresh and host it on Cloudflare Workers. This greatly improves performance and c
 
 ## How to run
 
-In your project's `deno.json` add the following task:
-```json
-{
-	"tasks": {
-		"prerender": "echo \"import 'jsr:@m4rocks/fresh-cloudflare-ssg'\" | deno run -A -",
-	}
-}
+First add the package:
+```bash
+deno add jsr:@m4rocks/fresh-cloudflare-ssg
 ```
 
-You can even schedule it after your build.
-```json
-{
-	"tasks": {
-		"prerender": "echo \"import 'jsr:@m4rocks/fresh-cloudflare-ssg'\" | deno run -A -",
-		"build": "vite build && deno task prerender",
-	}
-}
+Then add the plugin.
+```ts
+import { defineConfig } from "vite";
+import { fresh } from "@fresh/plugin-vite";
+import tailwindcss from "@tailwindcss/vite";
+import { freshCloudflareSSG } from "@m4rocks/fresh-cloudflare-ssg";
+
+export default defineConfig({
+	server: {
+		port: 3000
+	},
+	plugins: [fresh({
+		routeDir: "./src/routes",
+		islandsDir: "./src/components/islands",
+		clientEntry: "./src/client.ts"
+	}), freshCloudflareSSG(), tailwindcss()],
+});
 ```
 
 For Cloudflare to also pick up the prerendered routes, it is necessary to add the following to your `wrangler.json`.
@@ -71,5 +76,25 @@ export default define.page(function Home(ctx) {
     </div>
   );
 });
+```
 
+### Dynamic routes
+
+To prerender dynamic routes, you will need to import `defineStaticPaths` and return all the paths needed.
+
+```tsx
+import { define } from "@/lib/utils.ts";
+import { defineStaticPaths } from "@m4rocks/fresh-cloudflare-ssg";
+
+export const prerender = true;
+
+defineStaticPaths(() => {
+	return ["test", "hello"]
+})
+
+export default define.page(function Test({ params }) {
+	return (
+		<p>{params.test}</p>
+	);
+});
 ```

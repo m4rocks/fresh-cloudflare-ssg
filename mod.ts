@@ -1,46 +1,156 @@
-import { walk } from "@std/fs";
-import { buildFreshApp, startTestServer } from "./mock_server.ts";
 import * as path from "@std/path";
+import type { Plugin, ResolvedConfig } from "vite";
 
-const app = await buildFreshApp();
-const { server, address } = startTestServer(app);
-
-const paths: string[] = [];
-
-const baseRoutes = (await Deno.stat(path.toFileUrl(path.join(Deno.cwd(), "src")).pathname)).isDirectory ? "src/routes" : "routes";
-
-for await (const entry of walk(baseRoutes, {
-	includeFiles: true,
-	includeDirs: false,
-	skip: [/(?:^|[\\/])_(?![\\/])[^\\/]+$/, /(?:^|[\\/])[^\\/]*[\[\]][^\\/]*$/],
-})) {
-	const routePath = entry.path.replace(baseRoutes, "")
-		.replace(".tsx", "")
-		.replace("\\", "/")
-		.replace("index", "") || "/";
-
-	const imported = await import(path.toFileUrl(path.join(Deno.cwd(), entry.path)).href);
-	if (!imported.prerender === true) {
-		continue;
-	}
-
-	paths.push(routePath);
-	const res = await fetch(`${address}${routePath}`);
-	const text = await res.text();
-
-	if (!res.ok) {
-		console.log(res);
-		console.error(`Failed to prerender ${routePath}: ${res.status}`);
-		Deno.exit(1);
-	}
-
-
-	await Deno.writeTextFile(`./_fresh/client${routePath === "/" ? "/index" : routePath}.html`, text, {
-		create: true,
-		createNew: true,
-	});
+export interface ImportedRoute {
+	getStaticPaths?: GetStaticPaths;
 }
 
-console.log(`Prerendered ${paths.length} routes:`)
-console.log(paths.join("\n"));
-server.shutdown();
+export type GetStaticPaths = () => Promise<string[]> | string[];
+
+export function defineStaticPaths<T extends () => Promise<string[]> | string[]>(fn: T): void {
+	// This dummy reference ensures Rollup keeps the function
+	// @ts-ignore: We need this to avoid Fresh's treeshaking
+	globalThis.__keepStaticPaths ||= [];
+	// @ts-ignore: We need this to avoid Fresh's treeshaking
+	globalThis.__keepStaticPaths.push(fn);
+}
+
+export function freshCloudflareSSG(): Plugin[] {
+	let resolvedConfig: ResolvedConfig;
+	const routesToPrerender = new Map<string, string>();
+
+	const shouldCheckForPrerender = (id: string): boolean => {
+		return id.includes("/routes/") && !id.includes("/_");
+	};
+	return [{
+		name: "fresh-cloudflare-ssg",
+		configResolved(config) {
+			resolvedConfig = config;
+		},
+		transform(code, id) {
+			if (!shouldCheckForPrerender(id)) {
+				return null;
+			}
+
+			const hasPrerenderExport = /export\s+(?:const|let|var)\s+prerender\s*=\s*true/m.test(code);
+
+			if (hasPrerenderExport) {
+				const routePath = id
+					.replace(/.*\/routes/, "")
+					.replace(/\.(tsx?|jsx?)$/, "")
+					.replace(/\\/g, "/");
+
+				routesToPrerender.set(id, routePath);
+			}
+
+			return null;
+		},
+		async closeBundle() {
+			// Checking if this is is Fresh's SSR bundle
+			const isFreshBuildingSSR = resolvedConfig.build.ssr && (Object(resolvedConfig.build.rollupOptions.input)["server-entry"] === "fresh:server_entry")
+			if (!isFreshBuildingSSR) return;
+
+			const { server, address } = await startMockServer();
+
+			for await (const entry of routesToPrerender) {
+				// We check to see if this value is dynamic
+				const isDynamic = entry[1].includes("[");
+
+				if (isDynamic) {
+					if (entry[1].includes("[..")) {
+						throw new Error(`SSG does not support dynamic segments for ${entry[1]}`);
+					}
+
+					// We compare lenghts because we can't track defineStaticPaths across files
+					const formerGetStaticPathsFn = getAllGetStaticPathsFn()
+					await importGetStaticPaths(entry[1]);
+					const newGetStaticPathsFn = getAllGetStaticPathsFn();
+					const getStaticPathsFn = newGetStaticPathsFn[newGetStaticPathsFn.length - 1];
+
+					if (formerGetStaticPathsFn.length === newGetStaticPathsFn.length) {
+						throw new Error(`Route ${entry[1]} does not have a getStaticPaths function`);
+					}
+					try {
+						const paths = await getStaticPathsFn();
+
+						paths.forEach((p) => {
+							const replacedPath = entry[1]
+								.replace(/\[(.*?)\]/g, p);
+
+							// It's ok to use a made-up entry file path since we no longer read from it in the next step
+							routesToPrerender.set(`${entry[0]}+${p}`, replacedPath);
+						})
+						routesToPrerender.delete(entry[0]);
+					} catch (error) {
+						console.error(`Error fetching static paths for ${entry[1]}`, error);
+					}
+				}
+			}
+
+			for await (const entry of routesToPrerender) {
+				const pathname = entry[1]
+					.replace(/\/index$/, "");
+				const res = await fetch(`${address}${pathname}`);
+				const text = await res.text();
+
+				if (!res.ok) {
+					console.log(res);
+					console.error(`Failed to prerender ${pathname}: ${res.status}`);
+					Deno.exit(1);
+				}
+
+				try {
+					await Deno.mkdir(path.dirname(`./_fresh/client${entry[1]}.html`), { recursive: true });
+				} catch(_) {_};
+				await Deno.writeTextFile(`./_fresh/client${entry[1]}.html`, text, {
+					create: true,
+					createNew: true,
+				});
+			}
+			server.shutdown();
+			console.log("Mock server shutdown");
+			console.log(`Successfully prerendered`);
+			routesToPrerender.entries().forEach((entry) => console.log("\t", entry[1]))
+		}
+	}];
+}
+
+async function importGetStaticPaths(routePath: string) {
+	const viteManifest = await import(path.toFileUrl(path.join(Deno.cwd(), "_fresh", "server", ".vite", "manifest.json")).href, { with: { type: "json" } });
+
+	const routePathBuilt = "fresh-route::" + routePath
+		.replaceAll("/", "_")
+		.replaceAll("[", "")
+		.replaceAll("]", "")
+		.replaceAll("-", "_");
+
+	const routeModulePath = viteManifest.default[routePathBuilt]?.file || viteManifest.default[routePathBuilt + "_"]?.file;
+
+	if (!routeModulePath) {
+		throw new Error(`Route module not found for path: ${routePath}. Route assumed was ${routePathBuilt}`);
+	}
+	await import(path.toFileUrl(path.join(Deno.cwd(), "_fresh", "server", routeModulePath)).href);
+}
+
+export const getAllGetStaticPathsFn = () => {
+	// @ts-ignore: We need this to avoid Fresh's treeshaking
+	const fns: GetStaticPaths[] = globalThis.__keepStaticPaths || [];
+	return fns;
+}
+
+async function startMockServer() {
+	const app = await import(path.toFileUrl(path.join(Deno.cwd(), "_fresh/server.js")).href)
+	const server = Deno.serve({
+		port: 0,
+		handler: app.default.fetch,
+		onListen: ({ port }) => {
+			const address = `http://localhost:${port}`;
+			console.log(`Mock server started at ${address}`);
+		}
+	});
+
+	const { port } = server.addr as Deno.NetAddr;
+	const address = `http://localhost:${port}`;
+
+	return { server, address };
+}
