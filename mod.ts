@@ -139,7 +139,7 @@ export const getAllGetStaticPathsFn = (): GetStaticPaths[] => {
 }
 
 async function startMockServer() {
-	const app = await import(path.toFileUrl(path.join(Deno.cwd(), "_fresh/server.js")).href)
+	const app = await import(path.toFileUrl(path.join(Deno.cwd(), "_fresh/server/server-entry.mjs")).href)
 	const server = Deno.serve({
 		port: 0,
 		handler: app.default.fetch,
