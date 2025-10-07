@@ -1,6 +1,6 @@
 {
 	"name": "@m4rocks/fresh-ssg",
-	"version": "0.2.3",
+	"version": "0.2.4",
 	"license": "MIT",
 	"exports": "./mod.ts",
 	"nodeModulesDir": "auto",
@@ -8,6 +8,7 @@
 		"dev": "deno run --watch main.ts"
 	},
 	"imports": {
+		"@std/fs": "jsr:@std/fs@^1.0.19",
 		"@std/path": "jsr:@std/path@^1.1.2",
 		"vite": "npm:vite@^7.1.7"
 	}

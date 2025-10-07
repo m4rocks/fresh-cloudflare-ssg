@@ -1,9 +1,6 @@
 import * as path from "@std/path";
+import { ensureFile, exists } from "@std/fs";
 import type { Plugin, ResolvedConfig } from "vite";
-
-interface ImportedRoute {
-	getStaticPaths?: GetStaticPaths;
-}
 
 /**
  * A function that returns an array of strings representing the paths to be statically generated.
@@ -14,7 +11,7 @@ export type GetStaticPaths = () => Promise<string[]> | string[];
 /**
  * Registers a `defineStaticPaths` function for a specific route.
  * This function is used to define the paths that should be statically generated for dynamic routes.
- */ 
+ */
 export function defineStaticPaths<T extends GetStaticPaths>(fn: T): void {
 	// This dummy reference ensures Rollup keeps the function
 	// @ts-ignore: We need this to avoid Fresh's treeshaking
@@ -39,6 +36,18 @@ export function freshSSG(): Plugin[] {
 		name: "@m4rocks/fresh-ssg",
 		configResolved(config) {
 			resolvedConfig = config;
+		},
+		// This is a little fix for Fresh not creating the server.js file in time
+		async buildStart() {
+			const serverPath = path.join(resolvedConfig.root, "_fresh", "server.js");
+			if (!await exists(serverPath)) {
+				try {
+					await ensureFile(serverPath);
+					await Deno.writeTextFile(serverPath, "export default {};");
+				} catch (error) {
+					throw error;
+				}
+			}
 		},
 		transform(code, id) {
 			if (!shouldCheckForPrerender(id)) {
