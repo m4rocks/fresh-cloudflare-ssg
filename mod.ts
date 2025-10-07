@@ -15,7 +15,7 @@ export function defineStaticPaths<T extends () => Promise<string[]> | string[]>(
 	globalThis.__keepStaticPaths.push(fn);
 }
 
-export function freshCloudflareSSG(): Plugin[] {
+export function freshSSG(): Plugin[] {
 	let resolvedConfig: ResolvedConfig;
 	const routesToPrerender = new Map<string, string>();
 
@@ -23,7 +23,7 @@ export function freshCloudflareSSG(): Plugin[] {
 		return id.includes("/routes/") && !id.includes("/_");
 	};
 	return [{
-		name: "fresh-cloudflare-ssg",
+		name: "@m4rocks/fresh-ssg",
 		configResolved(config) {
 			resolvedConfig = config;
 		},
@@ -132,7 +132,7 @@ async function importGetStaticPaths(routePath: string) {
 	await import(path.toFileUrl(path.join(Deno.cwd(), "_fresh", "server", routeModulePath)).href);
 }
 
-export const getAllGetStaticPathsFn = (): GetStaticPaths[] => {
+const getAllGetStaticPathsFn = (): GetStaticPaths[] => {
 	// @ts-ignore: We need this to avoid Fresh's treeshaking
 	const fns: GetStaticPaths[] = globalThis.__keepStaticPaths || [];
 	return fns;

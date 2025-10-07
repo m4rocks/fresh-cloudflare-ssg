@@ -1,21 +1,22 @@
-# fresh-cloudflare-ssg
+# fresh-ssg
 
 This is a simple package that allows you to prerender some routes programatically within
-Fresh and host it on Cloudflare Workers. This greatly improves performance and cost of hosting.
+Fresh. This greatly improves performance and cost of hosting.
 
 ## Notes
-* This tool is very early. Later on, I might turn it into a vite plugin and might even make it universal for all hosting providers;
+* This tool is in very early development;
 * This tool is meant to work with Cloudflare. With a few tweaks it might be possible to make it run on other hosting providers;
 * The JavaScript for the prerendered routes is still present and will not be touched;
 * This package is intended for Fresh >= 2.0.0 projects;
 * This tool will automatically pick up the `routes/` or `src/routes/` folder;
 * Partials do not work when navigating to a prerendered route;
+* Has support for dynamic routes;
 
 ## How to run
 
 First add the package:
 ```bash
-deno add jsr:@m4rocks/fresh-cloudflare-ssg
+deno add jsr:@m4rocks/fresh-ssg
 ```
 
 Then add the plugin.
@@ -23,7 +24,7 @@ Then add the plugin.
 import { defineConfig } from "vite";
 import { fresh } from "@fresh/plugin-vite";
 import tailwindcss from "@tailwindcss/vite";
-import { freshCloudflareSSG } from "@m4rocks/fresh-cloudflare-ssg";
+import { freshSSG } from "@m4rocks/fresh-ssg";
 
 export default defineConfig({
 	server: {
@@ -33,7 +34,7 @@ export default defineConfig({
 		routeDir: "./src/routes",
 		islandsDir: "./src/components/islands",
 		clientEntry: "./src/client.ts"
-	}), freshCloudflareSSG(), tailwindcss()],
+	}), freshSSG(), tailwindcss()],
 });
 ```
 
@@ -84,7 +85,7 @@ To prerender dynamic routes, you will need to import `defineStaticPaths` and ret
 
 ```tsx
 import { define } from "@/lib/utils.ts";
-import { defineStaticPaths } from "@m4rocks/fresh-cloudflare-ssg";
+import { defineStaticPaths } from "@m4rocks/fresh-ssg";
 
 export const prerender = true;
 

@@ -1,5 +1,5 @@
 {
-	"name": "@m4rocks/fresh-cloudflare-ssg",
+	"name": "@m4rocks/fresh-ssg",
 	"version": "0.2.1",
 	"license": "MIT",
 	"exports": "./mod.ts",
