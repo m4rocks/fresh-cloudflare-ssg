@@ -6,7 +6,7 @@ import type { Plugin, ResolvedConfig } from "vite";
  * A function that returns an array of strings representing the paths to be statically generated.
  * This function can be asynchronous and can fetch data from external sources to determine the paths.
  */
-export type GetStaticPaths = () => Promise<string[]> | string[];
+type GetStaticPaths = () => Promise<string[]> | string[];
 
 /**
  * Registers a `defineStaticPaths` function for a specific route.
@@ -36,18 +36,6 @@ export function freshSSG(): Plugin[] {
 		name: "@m4rocks/fresh-ssg",
 		configResolved(config) {
 			resolvedConfig = config;
-		},
-		// This is a little fix for Fresh not creating the server.js file in time
-		async buildStart() {
-			const serverPath = path.join(resolvedConfig.root, "_fresh", "server.js");
-			if (!await exists(serverPath)) {
-				try {
-					await ensureFile(serverPath);
-					await Deno.writeTextFile(serverPath, "export default {};");
-				} catch (error) {
-					throw error;
-				}
-			}
 		},
 		transform(code, id) {
 			if (!shouldCheckForPrerender(id)) {

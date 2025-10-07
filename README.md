@@ -29,11 +29,7 @@ export default defineConfig({
 	server: {
 		port: 3000
 	},
-	plugins: [fresh({
-		routeDir: "./src/routes",
-		islandsDir: "./src/components/islands",
-		clientEntry: "./src/client.ts"
-	}), freshSSG(), tailwindcss()],
+	plugins: [fresh(), freshSSG(), tailwindcss()],
 });
 ```
 
@@ -44,6 +40,21 @@ Your code will run using Cloudflare's workerd runtime. Make sure you don't use D
 1. Install Cloudflare's vite plugin.
 ```bash
 deno add npm:@cloudflare/vite-plugin
+```
+
+2. Add the Cloudflare vite plugin to your `vite.config.ts` file.
+```ts
+import { defineConfig } from "vite";
+import { fresh } from "@fresh/plugin-vite";
+import tailwindcss from "@tailwindcss/vite";
+import { freshSSG } from "@m4rocks/fresh-ssg";
+
+export default defineConfig({
+	server: {
+		port: 3000
+	},
+	plugins: [fresh(), cloudflare({ viteEnvironment: { name: "ssr" }}), freshSSG(), tailwindcss()],
+});
 ```
 
 2. For Cloudflare to also pick up the prerendered routes, it is necessary to add the following to your `wrangler.json`.
@@ -95,7 +106,7 @@ export default defineConfig({
 	},
 	plugins: [fresh(), vercel(), freshSSG()],
 	vercel: {
-		distContainsOnlyStatic: true,
+		distContainsOnlyStatic: false,
 		rewrites: [
 			{ source: "/:path", destination: "/:path.html" },
 			{ source: "/(.*)", destination: "/api/handler" }
