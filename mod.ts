@@ -1,13 +1,21 @@
 import * as path from "@std/path";
 import type { Plugin, ResolvedConfig } from "vite";
 
-export interface ImportedRoute {
+interface ImportedRoute {
 	getStaticPaths?: GetStaticPaths;
 }
 
+/**
+ * A function that returns an array of strings representing the paths to be statically generated.
+ * This function can be asynchronous and can fetch data from external sources to determine the paths.
+ */
 export type GetStaticPaths = () => Promise<string[]> | string[];
 
-export function defineStaticPaths<T extends () => Promise<string[]> | string[]>(fn: T): void {
+/**
+ * Registers a `defineStaticPaths` function for a specific route.
+ * This function is used to define the paths that should be statically generated for dynamic routes.
+ */ 
+export function defineStaticPaths<T extends GetStaticPaths>(fn: T): void {
 	// This dummy reference ensures Rollup keeps the function
 	// @ts-ignore: We need this to avoid Fresh's treeshaking
 	globalThis.__keepStaticPaths ||= [];
@@ -15,6 +23,11 @@ export function defineStaticPaths<T extends () => Promise<string[]> | string[]>(
 	globalThis.__keepStaticPaths.push(fn);
 }
 
+/**
+ * A Vite plugin that enables static site generation (SSG) for Fresh framework routes.
+ * It scans the project for routes that export `prerender = true` and generates static HTML files
+ * for those routes, including handling dynamic routes with `defineStaticPaths`.
+ */
 export function freshSSG(): Plugin[] {
 	let resolvedConfig: ResolvedConfig;
 	const routesToPrerender = new Map<string, string>();
