@@ -3,6 +3,8 @@
 This is a simple package that allows you to prerender some routes programatically within
 Fresh. This greatly improves performance and cost of hosting.
 
+You can see deployment examples on [fresh-ssg.m4rocks.workers.dev](https://fresh-ssg.m4rocks.workers.dev) and [fresh-ssg.vercel.app](https://fresh-ssg.vercel.app).
+
 ## Notes
 * This tool is in very early development;
 * The JavaScript for the prerendered routes is still present and will not be touched;
@@ -116,7 +118,7 @@ export default {
 ```json
 {
 	"tasks": {
-		"build": "vite build && cp -r ./_fresh/client/* ./.vercel/output/static"
+		"build": "vite build && cp -r ./_fresh/client ./.vercel/output/static"
 	}
 }
 ```

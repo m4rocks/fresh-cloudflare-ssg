@@ -23,7 +23,7 @@ export default define.page(function Home(ctx) {
           height="128"
           alt="the Fresh logo: a sliced lemon dripping with juice"
         />
-        <h1 class="text-4xl font-bold">Welcome to Fresh</h1>
+        <h1 class="text-4xl font-bold">Welcome to FreshSSG + Cloudflare</h1>
         <p>
         	This page is statically generated at build time.
         </p>
