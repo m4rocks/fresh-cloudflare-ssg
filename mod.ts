@@ -37,6 +37,18 @@ export function freshSSG(): Plugin[] {
 		configResolved(config) {
 			resolvedConfig = config;
 		},
+		// This is a little fix for Fresh not creating the server.js file in time
+		async buildStart() {
+			const serverPath = path.join(resolvedConfig.root, "_fresh", "server.js");
+			if (!(await exists(serverPath))) {
+				try {
+					await ensureFile(serverPath);
+					await Deno.writeTextFile(serverPath, "export default {};");
+				} catch (error) {
+					throw error;
+				}
+			}
+		},
 		transform(code, id) {
 			if (!shouldCheckForPrerender(id)) {
 				return null;
@@ -110,12 +122,10 @@ export function freshSSG(): Plugin[] {
 				}
 
 				try {
-					await Deno.mkdir(path.dirname(`./_fresh/client${entry[1]}.html`), { recursive: true });
+					await ensureFile(path.join(resolvedConfig.environments["client"].build.outDir, `${entry[1]}.html`))
 				} catch(_) {_};
-				await Deno.writeTextFile(`./_fresh/client${entry[1]}.html`, text, {
-					create: true,
-					createNew: true,
-				});
+
+				await Deno.writeTextFile(path.join(resolvedConfig.environments["client"].build.outDir, `${entry[1]}.html`), text);
 			}
 			server.shutdown();
 			console.log("Mock server shutdown");

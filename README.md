@@ -35,29 +35,9 @@ export default defineConfig({
 
 ## How to deploy to Cloudflare
 
-Your code will run using Cloudflare's workerd runtime. Make sure you don't use Deno specific API's in server-rendered routes. When deploying to Cloudflare you will need a `wrangler.json` file and a `handler.js` file and also the Cloudflare's vite plugin.
+Your code will run using Cloudflare's workerd runtime. Make sure you don't use Deno specific API's in server-rendered routes. When deploying to Cloudflare you will need a `wrangler.json` file and a `handler.js` file. Cloudflare's Vite plugin does not generate the entry file properly.
 
-1. Install Cloudflare's vite plugin.
-```bash
-deno add npm:@cloudflare/vite-plugin
-```
-
-2. Add the Cloudflare vite plugin to your `vite.config.ts` file.
-```ts
-import { defineConfig } from "vite";
-import { fresh } from "@fresh/plugin-vite";
-import tailwindcss from "@tailwindcss/vite";
-import { freshSSG } from "@m4rocks/fresh-ssg";
-
-export default defineConfig({
-	server: {
-		port: 3000
-	},
-	plugins: [fresh(), cloudflare({ viteEnvironment: { name: "ssr" }}), freshSSG(), tailwindcss()],
-});
-```
-
-2. For Cloudflare to also pick up the prerendered routes, it is necessary to add the following to your `wrangler.json`.
+1. For Cloudflare to also pick up the prerendered routes, it is necessary to add the `main` and `assets.directory` to your `wrangler.json`.
 ```json
 {
 	"name": "stodio",
@@ -69,18 +49,18 @@ export default defineConfig({
 }
 ```
 
-3. For your `handler.js` file you will need the contents:
+2. For your `handler.js` file you will need the contents:
 ```js
 export default {
 	fetch: await import("./_fresh/server.js").then(mod => mod.default.fetch)
 }
 ```
 
-4. If you are building on Cloudflare, you will need to update your project settings:
+3. If you are building on Cloudflare, you will need to update your project settings:
 * Add variable: SKIP_DEPENDENCY_INSTALL=1
 * Build command: `npx deno install --allow-scripts && npx deno task build`
 
-Please see [Cloudflare's Vite Plugin documentation](https://developers.cloudflare.com/workers/vite-plugin/) for more information.
+<!--Please see [Cloudflare's Vite Plugin documentation](https://developers.cloudflare.com/workers/vite-plugin/) for more information.-->
 
 ## How to deploy to Vercel
 
