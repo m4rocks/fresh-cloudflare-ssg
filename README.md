@@ -66,13 +66,13 @@ export default {
 
 ## How to deploy to Vercel
 
-Hosting on Vercel will use NodeJS. Make sure you don't use Deno specific API's in server-rendered routes. For this you will need a `handler.js` file and `vite-plugin-vercel`.
+Hosting on Vercel will use NodeJS. Make sure you don't use Deno specific API's in server-rendered routes. For this you will need a `handler.js` file and `vite-plugin-vercel`. Note that while you don't use Deno Specific API's, Fresh might do. Fresh makes use of URLPattern and to allow Vercel to use it too, you will need to install polyfills.
 
 Please note that while [Vercel supports the Deno runtime](https://github.com/vercel-community/deno) for serverless functions, the package is outdated and does not work with Deno >2.0.
 
-1. Install `vite-plugin-vercel`
+1. Install `vite-plugin-vercel` and `urlpattern-polyfill`
 ```bash
-deno add npm:vite-plugin-vercel
+deno add npm:vite-plugin-vercel npm:urlpattern-polyfill
 ```
 
 2. Configure your `vite.config.ts` to handle Vercel.
@@ -108,6 +108,8 @@ export default defineConfig({
 
 3. The `handler.js` file should be created at the root of your project folder, but can be put anywhere. Just make sure you have updated the `additionalEndpoints` property in `vite-plugin-vercel` config. For your `handler.js` file you will need the contents:
 ```js
+import "urlpattern-polyfill";
+
 export default {
 	fetch: await import("./_fresh/server.js").then(mod => mod.default.fetch)
 }
